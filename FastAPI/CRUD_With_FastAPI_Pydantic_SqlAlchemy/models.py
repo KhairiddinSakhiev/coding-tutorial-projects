@@ -1,5 +1,6 @@
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from sqlalchemy import String, Integer, ForeignKey, Table, Column
+from sqlalchemy import String, Integer, ForeignKey, Table, Column, UUID
+import uuid
 
 class Base(DeclarativeBase):
     pass
@@ -14,6 +15,7 @@ class User(Base):
     profile:Mapped["UserProfile"] = relationship("UserProfile", back_populates="user")
     tasks:Mapped["Task"] = relationship("Task", back_populates="user")
     user_courses:Mapped["Course"] = relationship("Course", back_populates="users", secondary="user_course")
+    session:Mapped["SessionModel"] = relationship("SessionModel", back_populates="user")
     
     def __repr__(self):
         return f"user: {self.username}"
@@ -54,8 +56,12 @@ class Course(Base):
     
 
 
-"""
-user = User.object.filter(id=1).first()
-profile = UserProfile.object.filter(user_id=user.id)
+class SessionModel(Base):
+    __tablename__ = "sessions"
+    
+    id:Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True, index=True)
+    token:Mapped[str] = mapped_column(String, default=str(uuid.uuid4()))
+    user_id:Mapped[int] = mapped_column(Integer, ForeignKey("users.id"))
+    
+    user:Mapped["User"] = relationship("User", back_populates="session")
 
-"""
