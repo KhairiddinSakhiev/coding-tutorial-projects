@@ -11,7 +11,7 @@ def seed_permissions():
         for a in actions:
             permissions.append({
                 "name": f"{table.__name__.lower()}:{a}",
-                "descption": f"Can {a} {table.__name__.lower()}",
+                "description": f"Can {a} {table.__name__.lower()}",
                 "created_at": datetime.now(),
                 "updated_at": datetime.now()
             })

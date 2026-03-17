@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 # DATABASE_URL = "postgresql+psycopg2://postgres:Sakhi2000%40postgres@localhost/test_db"
 DATABASE_URL = "sqlite:///test_db.db"
 
-engine = create_engine(DATABASE_URL, echo=True)
+engine = create_engine(DATABASE_URL)
 
 SessionLocal = sessionmaker(autoflush=False, autocommit=False, bind=engine)
 

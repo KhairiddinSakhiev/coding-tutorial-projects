@@ -4,7 +4,7 @@ from .models import *
 from .security import *
 from .serivces import *
 from .schemas import *
-from .permissions import get_current_user
+from .permissions import *
 from server.settings import get_db
 
 
@@ -26,8 +26,8 @@ async def add_user(username:str, password:str, confirm_password:str):
     return new_user
 
 @auth.post("/login")
-async def login_user(response:Response, username: str, password: str):
-    user_exists = get_user(username=username)
+async def login_user(response:Response, username: str, password: str, db:Session=Depends(get_db)):
+    user_exists = get_user(username=username, db=db)
     if user_exists is not None:
         print("test", user_exists.password, user_exists.username)
         print(type(password))
@@ -41,12 +41,12 @@ async def login_user(response:Response, username: str, password: str):
         
     
 @auth.post("/logout")
-async def logout_view(respose:Response, user = Depends(get_current_user)):
+async def logout_view(respose:Response, user = Depends(is_authenticated)):
     respose.delete_cookie("auth_token")
     return "Logged out"
 
 
-@auth.post("/set-permissions-to-user")
+@auth.post("/set-permissions-to-user", dependencies=[Depends(has_permission(required_permission=["user:create"]))])
 async def set_permissions_to_user_view(data:SetPermissionToUserSchema, db:Session = Depends(get_db)):
     user = db.query(User).options(
         selectinload(User.permissions)).filter(User.id==data.user_id).first()
@@ -55,7 +55,8 @@ async def set_permissions_to_user_view(data:SetPermissionToUserSchema, db:Sessio
     permissions = db.query(Permissions).filter(Permissions.id.in_(data.permissions)).all()
     if permissions is not None:
         for per in permissions:
-            user.permissions.append(per)
+            if per not in user.permissions:
+                user.permissions.append(per)
         db.commit()
         return {"msg": "Success!"}
     return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="permissions with these ids not found")
